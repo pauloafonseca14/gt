@@ -1,56 +1,44 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-br">
     <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">  
     <title>Sistema de Gestão de Ticket</title>
     </head>
     <main>
-        <section id="1">
-            <form>
+        <section>
+            <form action="/">
                 <label for="tipo_ticket">Tipo do Ticket:</label><br>
                 <input type="radio" id="tipo_ticket" name="ticket" value="Requisição">
                 <label for ="tipo_ticket">Requisição</label>
                 <input type="radio" id="tipo_ticket" name="ticket" value="Incidente">
-                <label for ="tipo_ticket">Incidente</label>
-            </form>
-        </section>
-        <section id="2">
-            <form>
+                <label for ="tipo_ticket">Incidente</label><br>
                 <label for="definir_categoria">Definir Categoria:</label><br>
                 <input type="radio" id="definir_categoria" name="categoria" value="X">
                 <label for ="tipo_ticket">X</label>
                 <input type="radio" id="definir_categoria" name="categoria" value="Y">
                 <label for ="tipo_ticket">Y</label>
                 <input type="radio" id="definir_categoria" name="categoria" value="Z">
-                <label for ="tipo_ticket">Z</label>
-            </form>
-        </section>
-        <section id="3">
-            <form>
+                <label for ="tipo_ticket">Z</label><br>
                 <label for="nome_contato">Nome do Contato:</label>
                 <input type="text" id="nome_contato" name="nome_contato"><br>
                 <label for="email_contato">Email para Contato:</label>
                 <input type="email" id="email_contato" name="email_contato"><br>
                 <label for="telefone_contato">Telefone para Contato:</label>
                 <input type="text" id="telefone_contato" name="telefone_contato"><br>
-            </form>
-        </section>
-        <section id="4">
-            <form>
                 <label for="descricao">Descrição:</label><br>
-                <textarea id="descricao" name="descricao" rows="5" cols="60" placeholder="Digite seu texto aqui ..."></textarea>
-            </form>
-        </section>
-        <section id="5">
-            <form>
+                <textarea id="descricao" name="descricao" rows="5" cols="60" placeholder="Digite seu texto aqui ..."></textarea><br>
                 <label for="nivel_suporte">Nível do Suporte:</label><br>
                 <input type="radio" id="nivel_suporte" name="nivel_suporte" value="N1">
                 <label for ="nivel_suporte">N1</label>
                 <input type="radio" id="nivel_suporte" name="nivel_suporte" value="N2">
                 <label for ="nivel_suporte">N2</label>
                 <input type="radio" id="nivel_suporte" name="nivel_suporte" value="N3">
-                <label for ="nivel_suporte">N3</label> 
+                <label for ="nivel_suporte">N3</label><br>
+                <button type="submit">Criar Ticket</button>
+                <button type="submit" disabled>Consultar Ticket</button>
+                <button type="submit" disabled>Atualizar Ticket</button>
+                <button type="submit" disabled>Excluir Ticket</button>
             </form>
         </section>
     </main>
