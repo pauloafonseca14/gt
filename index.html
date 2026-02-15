@@ -1,46 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt">
-<head>
+    <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">  
     <title>Sistema de Gestão de Ticket</title>
-    <style>
-        p{
-
-        }
-        .container{
-            display: grid;
-            grid-template-columns: 80% auto;
-            padding: 10px;
-            row-gap: 20px;
-            column-gap: 20px;
-            margin-top: 50px;
-            margin-left: 20px;
-            margin-right: 20px;
-        }
-        .container > div{
-            border: 1px solid black;
-            padding: 10px;
-            font-size: 14px;
-            text-align: center;
-        }
-        .esquerda {
-            justify-self:left;
-        }
-    </style>
-</head>
-<body>
-    <p>Numero do ticket</p>
-    <div class="container">
-        <div class="esquerda">Tipo do ticket:</div>
-        <div class="direita">criar</div>
-        <div class="esquerda">Definir categoria:</div>
-        <div class="direita">consultar</div>
-        <div class="esquerda">Dados de contato:</div>
-        <div class="direita"></div>
-        <div class="esquerda">Descrição:</div>
-        <div class="direita"></div>
-        <div class="esquerda">Nível de suporte:</div>
-    </div>
+    </head>
+    <main>
+        <section id="1">
+            <form>
+                <label for="tipo_ticket">Tipo do Ticket:</label><br>
+                <input type="radio" id="tipo_ticket" name="ticket" value="Requisição">
+                <label for ="tipo_ticket">Requisição</label>
+                <input type="radio" id="tipo_ticket" name="ticket" value="Incidente">
+                <label for ="tipo_ticket">Incidente</label>
+            </form>
+        </section>
+        <section id="2">
+            <form>
+                <label for="definir_categoria">Definir Categoria:</label><br>
+                <input type="radio" id="definir_categoria" name="categoria" value="X">
+                <label for ="tipo_ticket">X</label>
+                <input type="radio" id="definir_categoria" name="categoria" value="Y">
+                <label for ="tipo_ticket">Y</label>
+                <input type="radio" id="definir_categoria" name="categoria" value="Z">
+                <label for ="tipo_ticket">Z</label>
+            </form>
+        </section>
+        <section id="3">
+            <form>
+                <label for="nome_contato">Nome do Contato:</label>
+                <input type="text" id="nome_contato" name="nome_contato"><br>
+                <label for="email_contato">Email para Contato:</label>
+                <input type="email" id="email_contato" name="email_contato"><br>
+                <label for="telefone_contato">Telefone para Contato:</label>
+                <input type="text" id="telefone_contato" name="telefone_contato"><br>
+            </form>
+        </section>
+        <section id="4">
+            <form>
+                <label for="descricao">Descrição:</label><br>
+                <textarea id="descricao" name="descricao" rows="5" cols="60" placeholder="Digite seu texto aqui ..."></textarea>
+            </form>
+        </section>
+        <section id="5">
+            <form>
+                <label for="nivel_suporte">Nível do Suporte:</label><br>
+                <input type="radio" id="nivel_suporte" name="nivel_suporte" value="N1">
+                <label for ="nivel_suporte">N1</label>
+                <input type="radio" id="nivel_suporte" name="nivel_suporte" value="N2">
+                <label for ="nivel_suporte">N2</label>
+                <input type="radio" id="nivel_suporte" name="nivel_suporte" value="N3">
+                <label for ="nivel_suporte">N3</label> 
+            </form>
+        </section>
+    </main>
 </body>
 </html>
