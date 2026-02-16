@@ -1,0 +1,151 @@
+/* Reset e Base */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+main {
+    background: #fff;
+    width: 100%;
+    max-width: 800px;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+h1 {
+    margin-bottom: 25px;
+    text-align: center;
+    color: #0056b3;
+}
+
+/* Configuração do Grid do Formulário */
+form {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Divide em duas colunas */
+    gap: 20px;
+}
+
+.full-width {
+    grid-column: span 2; /* Itens que ocupam a largura total */
+}
+
+/* Estilização de cada Item do Grid */
+.grid-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Alinhamento dos Radio Buttons lado a lado */
+.radio-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px; /* Espaço entre as opções */
+    height: 40px;
+}
+
+.radio-group input[type="radio"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.radio-group label {
+    font-weight: normal;
+    margin-left: -10px; /* Aproxima o texto do círculo */
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+/* Campos de Texto, Select e Textarea */
+input[type="text"],
+input[type="email"],
+select,
+textarea {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    width: 100%;
+    transition: border-color 0.3s;
+}
+
+input:focus, textarea:focus {
+    border-color: #0056b3;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0,86,179,0.1);
+}
+
+/* Estilização dos Botões */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+button {
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s, background-color 0.2s;
+}
+
+.btn-principal {
+    background-color: #28a745;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.acoes-secundarias {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.acoes-secundarias button {
+    background-color: #6c757d;
+    color: white;
+}
+
+button:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+button:disabled {
+    background-color: #e9ecef;
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+
+/* Responsividade para Celulares */
+@media (max-width: 600px) {
+    form {
+        grid-template-columns: 1fr;
+    }
+    .full-width {
+        grid-column: span 1;
+    }
+    .acoes-secundarias {
+        grid-template-columns: 1fr;
+    }
+}

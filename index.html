@@ -1,46 +1,94 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão de Ticket</title>
-    <style>
-        p{
-
-        }
-        .container{
-            display: grid;
-            grid-template-columns: 80% auto;
-            padding: 10px;
-            row-gap: 20px;
-            column-gap: 20px;
-            margin-top: 50px;
-            margin-left: 20px;
-            margin-right: 20px;
-        }
-        .container > div{
-            border: 1px solid black;
-            padding: 10px;
-            font-size: 14px;
-            text-align: center;
-        }
-        .esquerda {
-            justify-self:left;
-        }
-    </style>
+    <link rel="stylesheet" href="estilo.css">
+    <script src="script.js"></script>
 </head>
 <body>
-    <p>Numero do ticket</p>
-    <div class="container">
-        <div class="esquerda">Tipo do ticket:</div>
-        <div class="direita">criar</div>
-        <div class="esquerda">Definir categoria:</div>
-        <div class="direita">consultar</div>
-        <div class="esquerda">Dados de contato:</div>
-        <div class="direita"></div>
-        <div class="esquerda">Descrição:</div>
-        <div class="direita"></div>
-        <div class="esquerda">Nível de suporte:</div>
-    </div>
+    <main>
+        <section>
+            <h1>Gestão de Tickets</h1>
+            <form action="/">
+                <div class="grid-item">
+                    <label class="titulo-campo">Tipo do Ticket:</label>
+                    <div class="radio-group">
+                        <input type="radio" id="req" name="ticket" value="Requisição">
+                        <label for="req">Requisição</label>
+                        <input type="radio" id="inc" name="ticket" value="Incidente">
+                        <label for="inc">Incidente</label>
+                    </div>
+                </div>
+
+                <div class="grid-item">
+                    <label class="titulo-campo">Definir Categoria:</label>
+                    <div class="radio-group">
+                        <input type="radio" id="catX" name="categoria" value="X">
+                        <label for="catX">X</label>
+                        <input type="radio" id="catY" name="categoria" value="Y">
+                        <label for="catY">Y</label>
+                        <input type="radio" id="catZ" name="categoria" value="Z">
+                        <label for="catZ">Z</label>
+                    </div>
+                </div>
+
+                <div class="grid-item full-width">
+                    <label for="nome_contato">Nome do Contato:</label>
+                    <input type="text" id="nome_contato" name="nome_contato">
+                </div>
+
+                <div class="grid-item">
+                    <label for="email_contato">Email para Contato:</label>
+                    <input type="email" id="email_contato" name="email_contato">
+                </div>
+
+                <div class="grid-item">
+                    <label for="telefone_contato">Telefone para Contato:</label>
+                    <input type="text" id="telefone_contato" name="telefone_contato">
+                </div>
+
+                <div class="grid-item full-width">
+                    <label for="descricao">Descrição do Problema:</label>
+                    <textarea id="descricao_problema" name="descricao" rows="4" placeholder="Digite seu texto aqui ..."></textarea>
+                </div>
+
+                <div class="grid-item full-width">
+                    <label for="descricao">Descrição da Resolução:</label>
+                    <textarea id="descricao_resolução" name="descricao" rows="4" placeholder="Bloqueado na ação Criar Ticket ..." disabled></textarea>
+                </div>
+                
+                <div class="grid-item full-width">
+                    <label class="titulo-campo">Nível do Suporte:</label>
+                    <div class="radio-group">
+                        <input type="radio" id="n1" name="nivel_suporte" value="N1">
+                        <label for="n1">N1</label>
+                        <input type="radio" id="n2" name="nivel_suporte" value="N2">
+                        <label for="n2">N2</label>
+                        <input type="radio" id="n3" name="nivel_suporte" value="N3">
+                        <label for="n3">N3</label>
+                    </div>
+                </div>
+
+                <div class="grid-item full-width">
+                    <label for="lista">Selecionar Ticket Existente:</label>
+                    <select id="lista" name="lista">
+                        <option value="padrao">Ticket #001 - Exemplo</option>
+                    </select>
+                </div>
+
+                <div class="button-group full-width">
+                    <button type="submit" id="criar_ticket" class="btn-principal">Criar Ticket</button>
+                    <div class="acoes-secundarias">
+                        <button type="submit" id="consultar_ticket" disabled>Consultar</button>
+                        <button type="submit" id="atualizar_ticket" disabled>Atualizar</button>
+                        <button type="submit" id="excluir_ticket" disabled>Excluir</button>
+                        <button type="submit" id="encerrar_ticket" disabled>Encerrar</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </main>
 </body>
 </html>
