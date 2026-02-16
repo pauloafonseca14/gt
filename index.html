@@ -50,10 +50,15 @@
                 </div>
 
                 <div class="grid-item full-width">
-                    <label for="descricao">Descrição:</label>
-                    <textarea id="descricao" name="descricao" rows="4" placeholder="Digite seu texto aqui ..."></textarea>
+                    <label for="descricao">Descrição do Problema:</label>
+                    <textarea id="descricao_problema" name="descricao" rows="4" placeholder="Digite seu texto aqui ..."></textarea>
                 </div>
 
+                <div class="grid-item full-width">
+                    <label for="descricao">Descrição da Resolução:</label>
+                    <textarea id="descricao_resolução" name="descricao" rows="4" placeholder="Bloqueado na ação Criar Ticket ..." disabled></textarea>
+                </div>
+                
                 <div class="grid-item full-width">
                     <label class="titulo-campo">Nível do Suporte:</label>
                     <div class="radio-group">
@@ -79,6 +84,7 @@
                         <button type="submit" id="consultar_ticket" disabled>Consultar</button>
                         <button type="submit" id="atualizar_ticket" disabled>Atualizar</button>
                         <button type="submit" id="excluir_ticket" disabled>Excluir</button>
+                        <button type="submit" id="encerrar_ticket" disabled>Encerrar</button>
                     </div>
                 </div>
             </form>
