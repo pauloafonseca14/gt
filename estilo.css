@@ -17,7 +17,7 @@ body {
 main {
     background: #fff;
     width: 100%;
-    max-width: 800px;
+    max-width: 900px;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -45,6 +45,17 @@ form {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+/* Faz o container de categoria ocupar a largura total para o input não ficar espremido */
+.grid-item:has(#catX) {
+    grid-column: span 2;
+}
+
+/* Garante que o input de texto não herde o layout row do radio-group */
+#outra_categoria {
+    display: block;
+    margin-top: 5px;
 }
 
 label {
