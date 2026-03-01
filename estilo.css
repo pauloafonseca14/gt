@@ -29,33 +29,20 @@ h1 {
     color: #0056b3;
 }
 
-/* Configuração do Grid do Formulário */
 form {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Divide em duas colunas */
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
 
 .full-width {
-    grid-column: span 2; /* Itens que ocupam a largura total */
+    grid-column: span 2;
 }
 
-/* Estilização de cada Item do Grid */
 .grid-item {
     display: flex;
     flex-direction: column;
     gap: 8px;
-}
-
-/* Faz o container de categoria ocupar a largura total para o input não ficar espremido */
-.grid-item:has(#catX) {
-    grid-column: span 2;
-}
-
-/* Garante que o input de texto não herde o layout row do radio-group */
-#outra_categoria {
-    display: block;
-    margin-top: 5px;
 }
 
 label {
@@ -63,12 +50,28 @@ label {
     font-size: 0.9rem;
 }
 
-/* Alinhamento dos Radio Buttons lado a lado */
+/* Checkbox Estilização */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+    padding: 5px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
 .radio-group {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 15px; /* Espaço entre as opções */
+    gap: 15px;
     height: 40px;
 }
 
@@ -80,12 +83,11 @@ label {
 
 .radio-group label {
     font-weight: normal;
-    margin-left: -10px; /* Aproxima o texto do círculo */
+    margin-left: -10px;
     margin-right: 10px;
     cursor: pointer;
 }
 
-/* Campos de Texto, Select e Textarea */
 input[type="text"],
 input[type="email"],
 select,
@@ -104,7 +106,6 @@ input:focus, textarea:focus {
     box-shadow: 0 0 0 2px rgba(0,86,179,0.1);
 }
 
-/* Estilização dos Botões */
 .button-group {
     display: flex;
     flex-direction: column;
@@ -148,15 +149,8 @@ button:disabled {
     cursor: not-allowed;
 }
 
-/* Responsividade para Celulares */
 @media (max-width: 600px) {
-    form {
-        grid-template-columns: 1fr;
-    }
-    .full-width {
-        grid-column: span 1;
-    }
-    .acoes-secundarias {
-        grid-template-columns: 1fr;
-    }
+    form { grid-template-columns: 1fr; }
+    .full-width { grid-column: span 1; }
+    .acoes-secundarias { grid-template-columns: 1fr; }
 }

@@ -3,19 +3,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCriar = document.getElementById('criar_ticket');
     const btnEncerrar = document.getElementById('encerrar_ticket');
     const campoResolucao = document.getElementById('descricao_resolução');
+    const checkResolucao = document.getElementById('check_resolucao'); // Novo
     const inputOutraCategoria = document.getElementById('outra_categoria');
     const inputTelefone = document.getElementById('telefone_contato');
     const botoesSecundarios = document.querySelectorAll('.acoes-secundarias button');
     const listaTickets = document.getElementById('lista');
 
-    // 1. Limita o telefone a no máximo 11 caracteres
+    // Limita o telefone a 11 dígitos
     inputTelefone.addEventListener('input', () => {
-        if (inputTelefone.value.length > 11) {
-            inputTelefone.value = inputTelefone.value.slice(0, 11);
+        inputTelefone.value = inputTelefone.value.replace(/\D/g, '').slice(0, 11);
+    });
+
+    // Lógica do Checkbox para habilitar Resolução
+    checkResolucao.addEventListener('change', () => {
+        if (checkResolucao.checked) {
+            campoResolucao.disabled = false;
+            campoResolucao.placeholder = "Descreva a solução aplicada...";
+            campoResolucao.focus();
+        } else {
+            campoResolucao.disabled = true;
+            campoResolucao.value = "";
+            campoResolucao.placeholder = "Bloqueado. Use o checkbox acima para liberar.";
         }
     });
 
-    // 2. Inicializa a lista com o valor padrão
+    // Inicializa a lista de tickets
     function inicializarLista() {
         listaTickets.innerHTML = ''; 
         const defaultOp = document.createElement('option');
@@ -35,9 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 3. Habilita Descrição da Resolução apenas ao clicar em "Encerrar"
+    // Botão Encerrar: Agora ele também marca o checkbox
     btnEncerrar.addEventListener('click', (e) => {
         e.preventDefault(); 
+        checkResolucao.checked = true;
         campoResolucao.disabled = false;
         campoResolucao.focus();
         campoResolucao.placeholder = "Descreva a solução para encerrar...";
@@ -46,27 +59,19 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const botaoClicado = event.submitter.id;
-
         const formData = new FormData(form);
         const dados = Object.fromEntries(formData.entries());
         
-        // Remove campos que não vão para o backend
         delete dados.lista;
-
-        if (dados.categoria === 'Outro') {
-            dados.categoria = dados.outra_categoria;
-        }
+        if (dados.categoria === 'Outro') dados.categoria = dados.outra_categoria;
         delete dados.outra_categoria;
 
         if (botaoClicado === 'criar_ticket') {
             await executarCriarTicket(dados);
-        } else {
-            console.log("Ação disparada:", botaoClicado);
         }
     });
 
     async function executarCriarTicket(dados) {
-        // Validação básica
         const camposObrigatorios = ['ticket', 'categoria', 'nome_contato', 'email_contato', 'descricao'];
         if (camposObrigatorios.some(campo => !dados[campo])) {
             alert("⚠️ Preencha todos os campos obrigatórios.");
@@ -82,12 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const res = await response.json();
-                
-                // 4. Vincula resposta à lista: Lado a Lado
                 const novaOpcao = document.createElement('option');
                 novaOpcao.value = res.id_gerado;
-                // Formato solicitado: #ID | SLA | Categoria | Nível
-                novaOpcao.textContent = `#${res.id_gerado} | ${res.ticket} | ${res.categoria} | ${res.nivel_suporte}`;
+                novaOpcao.textContent = `#${res.id_gerado} | ${res.ticket} | ${res.nivel_suporte} | ${res.categoria} |`;
                 novaOpcao.selected = true;
                 listaTickets.appendChild(novaOpcao);
 
@@ -101,14 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function resetarInterface() {
         form.reset();
-        
-        // Habilita todos os botões para novas inserções/edições
+        checkResolucao.checked = false;
+        campoResolucao.disabled = true;
+        campoResolucao.placeholder = "Bloqueado. Use o checkbox acima para liberar.";
         btnCriar.disabled = false;
         botoesSecundarios.forEach(btn => btn.disabled = false);
-        
-        // Bloqueia novamente os campos específicos conforme regra
-        campoResolucao.disabled = true;
-        campoResolucao.placeholder = "Bloqueado na ação Criar Ticket ...";
         inputOutraCategoria.disabled = true;
     }
 });

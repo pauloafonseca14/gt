@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão de Ticket</title>
     <link rel="stylesheet" href="estilo.css">
-    <script src="script.js"></script>
 </head>
 <body>
     <main>
@@ -66,19 +65,22 @@
                 </div>
 
                 <div class="grid-item full-width">
-                    <label for="descricao">Descrição do Problema:</label>
+                    <label for="descricao_problema">Descrição do Problema:</label>
                     <textarea id="descricao_problema" name="descricao" rows="4" placeholder="Digite seu texto aqui ..."></textarea>
                 </div>
 
                 <div class="grid-item full-width">
-                    <label for="descricao">Descrição da Resolução:</label>
-                    <textarea id="descricao_resolução" name="descricao_resolucao" rows="4" placeholder="Bloqueado na ação Criar Ticket ..." disabled></textarea>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="check_resolucao">
+                        <label for="check_resolucao" style="font-weight: normal;">Habilitar preenchimento da resolução</label>
+                    </div>
+                    <label for="descricao_resolução">Descrição da Resolução:</label>
+                    <textarea id="descricao_resolução" name="descricao_resolucao" rows="4" placeholder="Bloqueado. Use o checkbox acima para liberar." disabled></textarea>
                 </div>
 
                 <div class="grid-item full-width">
                     <label for="lista">Selecionar Ticket Existente:</label>
-                    <select id="lista" name="lista">
-                        </select>
+                    <select id="lista" name="lista"></select>
                 </div>
 
                 <div class="button-group full-width">
@@ -93,5 +95,6 @@
             </form>
         </section>
     </main>
+    <script src="script.js"></script>
 </body>
 </html>

@@ -5,9 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Column, String, Integer, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import strdb
 
 # 1. Configuração do Banco de Dados
-DATABASE_URL = "postgresql://postgres:1234@localhost:5432/postgres"
+DATABASE_URL = f'{strdb.strdb()}'
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -69,8 +70,9 @@ async def criar_item(post_ticket: Jsonfromjs):
         return {
             "id_gerado": novo_ticket_db.id,
             "ticket": post_ticket.ticket,
+            "nivel_suporte": post_ticket.nivel_suporte,
             "categoria": post_ticket.categoria,
-            "nivel_suporte": post_ticket.nivel_suporte
+            
         }
     
     except Exception as e:
