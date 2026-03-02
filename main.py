@@ -1,10 +1,10 @@
 import json
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Column, String, Integer, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 import strdb
 
 # 1. Configuração do Banco de Dados
@@ -49,9 +49,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post('/criar_ticket')
-async def criar_item(post_ticket: Jsonfromjs):
+# Dependência para obter a sessão do banco
+def get_db():
     db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.post('/criar_ticket')
+async def criar_item(post_ticket: Jsonfromjs, db: Session = Depends(get_db)):
     try:
         novo_ticket_db = TicketModel(
             ticket_ref=post_ticket.ticket,
@@ -72,11 +79,30 @@ async def criar_item(post_ticket: Jsonfromjs):
             "ticket": post_ticket.ticket,
             "nivel_suporte": post_ticket.nivel_suporte,
             "categoria": post_ticket.categoria,
-            
         }
-    
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Erro no banco: {str(e)}")
-    finally:
-        db.close()
+
+# --- NOVO ENDPOINT DE CONSULTA ---
+@app.get('/consultar_ticket/{ticket_id}')
+async def consultar_ticket(ticket_id: int, db: Session = Depends(get_db)):
+    """
+    Busca um ticket pelo ID no banco de dados.
+    Corresponde ao fetch no script.js: /consultar_ticket/${id}
+    """
+    ticket = db.query(TicketModel).filter(TicketModel.id == ticket_id).first()
+    
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket não encontrado")
+    
+    return {
+        "id": ticket.id,
+        "ticket": ticket.ticket_ref,
+        "categoria": ticket.categoria,
+        "nome_contato": ticket.nome_contato,
+        "email_contato": ticket.email_contato,
+        "telefone_contato": ticket.telefone_contato,
+        "descricao": ticket.descricao,
+        "nivel_suporte": ticket.nivel_suporte
+    }
