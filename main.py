@@ -14,12 +14,10 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# 2. Modelo do Banco de Dados (SQLAlchemy)
 class TicketModel(Base):
     __tablename__ = "tickets"
-
     id = Column(Integer, primary_key=True, index=True)
-    ticket_ref = Column(String)  # Armazena o Tipo/SLA
+    ticket_ref = Column(String)
     categoria = Column(String)
     nome_contato = Column(String)
     email_contato = Column(String)
@@ -27,10 +25,8 @@ class TicketModel(Base):
     descricao = Column(String)
     nivel_suporte = Column(String)
 
-# Cria a tabela se ela não existir
 Base.metadata.create_all(bind=engine)
 
-# 3. Esquema de Entrada (Pydantic)
 class Jsonfromjs(BaseModel):
     ticket: str 
     categoria: str
@@ -49,13 +45,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Dependência para obter a sessão do banco
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+# Requisito 2: Endpoint para alimentar a lista drop-down automaticamente
+@app.get('/listar_tickets')
+async def listar_tickets(db: Session = Depends(get_db)):
+    tickets = db.query(TicketModel).all()
+    return [
+        {
+            "id": t.id,
+            "ticket": t.ticket_ref,
+            "nivel_suporte": t.nivel_suporte,
+            "categoria": t.categoria
+        } for t in tickets
+    ]
 
 @app.post('/criar_ticket')
 async def criar_item(post_ticket: Jsonfromjs, db: Session = Depends(get_db)):
@@ -69,33 +77,19 @@ async def criar_item(post_ticket: Jsonfromjs, db: Session = Depends(get_db)):
             descricao=post_ticket.descricao,
             nivel_suporte=post_ticket.nivel_suporte
         )
-        
         db.add(novo_ticket_db)
         db.commit()
         db.refresh(novo_ticket_db)
-        
-        return {
-            "id_gerado": novo_ticket_db.id,
-            "ticket": post_ticket.ticket,
-            "nivel_suporte": post_ticket.nivel_suporte,
-            "categoria": post_ticket.categoria,
-        }
+        return {"id_gerado": novo_ticket_db.id, "ticket": post_ticket.ticket}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Erro no banco: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-# --- NOVO ENDPOINT DE CONSULTA ---
 @app.get('/consultar_ticket/{ticket_id}')
 async def consultar_ticket(ticket_id: int, db: Session = Depends(get_db)):
-    """
-    Busca um ticket pelo ID no banco de dados.
-    Corresponde ao fetch no script.js: /consultar_ticket/${id}
-    """
     ticket = db.query(TicketModel).filter(TicketModel.id == ticket_id).first()
-    
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket não encontrado")
-    
     return {
         "id": ticket.id,
         "ticket": ticket.ticket_ref,

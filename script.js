@@ -1,157 +1,167 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('form');
-    const btnCriar = document.getElementById('criar_ticket');
-    const btnConsultar = document.getElementById('consultar_ticket');
-    const btnAtualizar = document.getElementById('atualizar_ticket');
-    const btnEncerrar = document.getElementById('encerrar_ticket');
-    const campoResolucao = document.getElementById('descricao_resolução');
-    const checkResolucao = document.getElementById('check_resolucao'); 
-    const inputOutraCategoria = document.getElementById('outra_categoria');
-    const inputTelefone = document.getElementById('telefone_contato');
-    const botoesSecundarios = document.querySelectorAll('.acoes-secundarias button');
+    const form = document.getElementById('formTicket');
     const listaTickets = document.getElementById('lista');
+    const checkEdicao = document.getElementById('check_edicao');
+    const labelEdicao = document.getElementById('label_edicao');
+    const inputOutraCategoria = document.getElementById('outra_categoria');
+    const campoResolucao = document.getElementById('descricao_resolução');
+    const checkResolucao = document.getElementById('check_resolucao');
+    const btnInicio = document.getElementById('btn_inicio');
+    const btnCriarTicket = document.getElementById('criar_ticket');
 
-    // 1. Limita o telefone a 11 dígitos
-    inputTelefone.addEventListener('input', () => {
-        inputTelefone.value = inputTelefone.value.replace(/\D/g, '').slice(0, 11);
-    });
+    let ticketConsultado = false; 
 
-    // 2. Lógica do Checkbox para habilitar Resolução
-    checkResolucao.addEventListener('change', () => {
-        if (checkResolucao.checked) {
-            campoResolucao.disabled = false;
-            campoResolucao.placeholder = "Descreva a solução aplicada...";
-            campoResolucao.focus();
-        } else {
-            campoResolucao.disabled = true;
-            campoResolucao.value = "";
-            campoResolucao.placeholder = "Bloqueado. Use o checkbox acima para liberar.";
+    // Função para carregar lista com bypass no catch em caso de erro/vazio
+    async function carregarLista() {
+        try {
+            const response = await fetch('http://127.0.0.1:8000/listar_tickets');
+            if (response.ok) {
+                const tickets = await response.json();
+                listaTickets.innerHTML = '<option value="" disabled selected>Escolher ticket</option>';
+                tickets.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = `#${t.id} | ${t.ticket} | ${t.nivel_suporte} | ${t.categoria}`;
+                    listaTickets.appendChild(opt);
+                });
+            }
+        } catch (e) { 
+            // Bypass: Silencia o erro caso o BD não esteja acessível ou vazio
+            console.log("Aviso: Banco de dados não disponível ou vazio."); 
+            listaTickets.innerHTML = '<option value="" disabled selected>Nenhum ticket encontrado</option>';
         }
+    }
+
+    // Requisito 3: Ação do ícone início
+    btnInicio.addEventListener('click', () => {
+        form.reset();
+        ticketConsultado = false;
+        
+        // Reset da UI de Edição
+        checkEdicao.checked = false;
+        checkEdicao.disabled = true; 
+        labelEdicao.style.color = "#6c757d";
+        labelEdicao.textContent = "Habilitar edição (Consultar primeiro)";
+        
+        btnCriarTicket.disabled = false; // Permite criar novo ticket
+        gerenciarCampos(true); // Inputs livres para novo ticket
+        carregarLista(); // Tenta recarregar lista (com bypass)
     });
 
-    // 3. Inicializa a lista
-    function inicializarLista() {
-        listaTickets.innerHTML = ''; 
-        const defaultOp = document.createElement('option');
-        defaultOp.textContent = 'Escolher ticket';
-        defaultOp.value = ""; 
-        defaultOp.disabled = true;
-        defaultOp.selected = true;
-        listaTickets.appendChild(defaultOp);
+    function gerenciarCampos(permitir) {
+        const seletores = 'input:not(#check_edicao), textarea, select:not(#lista)';
+        form.querySelectorAll(seletores).forEach(campo => {
+            campo.disabled = !permitir;
+        });
+        
+        if (permitir) {
+            // Lógica específica para categoria "Outro"
+            inputOutraCategoria.disabled = !document.getElementById('catZ').checked;
+            campoResolucao.disabled = !checkResolucao.checked;
+        }
     }
-    inicializarLista();
 
-    // 4. Controle do campo "Outra Categoria"
+    // Monitora mudanças nos radios de categoria (Criação ou Edição ativa)
     form.addEventListener('change', (e) => {
         if (e.target.name === 'categoria') {
-            inputOutraCategoria.disabled = (e.target.id !== 'catZ');
-            if (inputOutraCategoria.disabled) inputOutraCategoria.value = '';
+            const isOutro = document.getElementById('catZ').checked;
+            if (!ticketConsultado || checkEdicao.checked) {
+                inputOutraCategoria.disabled = !isOutro;
+                if (!isOutro) inputOutraCategoria.value = "";
+            }
         }
     });
 
-    // 5. Função para gerenciar o estado dos campos (Enabled/Disabled)
-    function gerenciarEdicao(travar) {
-        const elementos = form.querySelectorAll('input, textarea');
-        elementos.forEach(el => {
-            // Nunca trava a lista de seleção nem o botão de consulta
-            if (el.id !== 'lista' && el.id !== 'consultar_ticket') {
-                el.disabled = travar;
-            }
-        });
-        btnCriar.disabled = travar;
-    }
-
-    // 6. Listener de Submissão
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const botaoClicado = event.submitter.id;
-        const formData = new FormData(form);
-        const dados = Object.fromEntries(formData.entries());
-        
-        if (dados.categoria === 'Outro') dados.categoria = dados.outra_categoria;
-        delete dados.outra_categoria;
-
-        if (botaoClicado === 'criar_ticket') {
-            await executarCriarTicket(dados);
-        } else if (botaoClicado === 'consultar_ticket') {
-            const id = listaTickets.value;
-            if (!id) return alert("Selecione um ticket.");
-            await executarConsultarTicket(id);
-        } else if (botaoClicado === 'atualizar_ticket') {
-            // O botão atualizar agora é o gatilho para habilitar e resetar
-            resetarInterface();
-            alert("Campos habilitados para nova edição/atualização.");
+    checkEdicao.addEventListener('change', () => {
+        if (ticketConsultado) {
+            gerenciarCampos(checkEdicao.checked);
         }
     });
 
-    // 7. Função: Criar Ticket
-    async function executarCriarTicket(dados) {
-        try {
-            const response = await fetch('http://127.0.0.1:8000/criar_ticket', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dados)
-            });
-
-            if (response.ok) {
-                const res = await response.json();
-                const novaOpcao = document.createElement('option');
-                novaOpcao.value = res.id_gerado;
-                novaOpcao.textContent = `#${res.id_gerado} | ${res.ticket} | ${res.nivel_suporte} | ${res.categoria}`;
-                listaTickets.appendChild(novaOpcao);
-
-                alert(`✅ Ticket #${res.id_gerado} criado!`);
-                
-                // EXECUÇÃO APÓS CRIAR (Conforme solicitado)
-                resetarInterface();
-            }
-        } catch (error) {
-            alert("Erro na conexão.");
-        }
-    }
-
-    // 8. Função: Consultar Ticket
-    async function executarConsultarTicket(id) {
+    // Requisito 2: Consulta desabilita apenas Criar Ticket
+    async function consultarTicket(id) {
+        form.reset();
         try {
             const response = await fetch(`http://127.0.0.1:8000/consultar_ticket/${id}`);
             if (response.ok) {
                 const d = await response.json();
+                preencherDados(d);
                 
-                // Preenchimento
-                const radioT = form.querySelector(`input[name="ticket"][value="${d.ticket}"]`);
-                if (radioT) radioT.checked = true;
-
-                const radioN = form.querySelector(`input[name="nivel_suporte"][value="${d.nivel_suporte}"]`);
-                if (radioN) radioN.checked = true;
-
-                const radioC = form.querySelector(`input[name="categoria"][value="${d.categoria}"]`);
-                if (radioC) {
-                    radioC.checked = true;
-                } else {
-                    document.getElementById('catZ').checked = true;
-                    inputOutraCategoria.value = d.categoria;
-                }
-
-                document.getElementById('nome_contato').value = d.nome_contato;
-                document.getElementById('email_contato').value = d.email_contato;
-                document.getElementById('telefone_contato').value = d.telefone_contato;
-                document.getElementById('descricao_problema').value = d.descricao;
-
-                // DESABILITA PARA EDIÇÃO APÓS CONSULTAR (Conforme solicitado)
-                gerenciarEdicao(true);
+                ticketConsultado = true; 
+                btnCriarTicket.disabled = true; // Bloqueia criação
+                
+                // Ativa controle de edição
+                checkEdicao.disabled = false;
+                checkEdicao.checked = false;
+                labelEdicao.style.color = "#0056b3";
+                labelEdicao.textContent = "Habilitar campos para edição";
+                
+                gerenciarCampos(false); 
             }
-        } catch (error) {
-            alert("Erro ao consultar.");
-        }
+        } catch (e) { alert("Erro ao consultar ticket."); }
     }
 
-    // 9. Reseta a interface e HABILITA os campos
-    function resetarInterface() {
-        form.reset();
-        gerenciarEdicao(false); // Habilita novamente
-        checkResolucao.checked = false;
-        campoResolucao.disabled = true;
-        inputOutraCategoria.disabled = true;
-        botoesSecundarios.forEach(btn => btn.disabled = false);
+    function preencherDados(d) {
+        const rTicket = form.querySelector(`input[name="ticket"][value="${d.ticket}"]`);
+        if(rTicket) rTicket.checked = true;
+        
+        const rNivel = form.querySelector(`input[name="nivel_suporte"][value="${d.nivel_suporte}"]`);
+        if(rNivel) rNivel.checked = true;
+        
+        const rCat = form.querySelector(`input[name="categoria"][value="${d.categoria}"]`);
+        if (rCat) {
+            rCat.checked = true;
+            inputOutraCategoria.disabled = true;
+        } else {
+            document.getElementById('catZ').checked = true;
+            inputOutraCategoria.value = d.categoria;
+            inputOutraCategoria.disabled = true; 
+        }
+
+        document.getElementById('nome_contato').value = d.nome_contato;
+        document.getElementById('email_contato').value = d.email_contato;
+        document.getElementById('telefone_contato').value = d.telefone_contato;
+        document.getElementById('descricao_problema').value = d.descricao;
     }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const acao = e.submitter.id;
+
+        if (acao === 'consultar_ticket') {
+            const id = listaTickets.value;
+            if (id) await consultarTicket(id);
+            else alert("Selecione um ticket.");
+        } else if (acao === 'criar_ticket') {
+            const formData = new FormData(form);
+            const dados = Object.fromEntries(formData.entries());
+            
+            // Tratamento para salvar "Outra Categoria" corretamente
+            if (dados.categoria === "Outro") {
+                dados.categoria = dados.outra_categoria;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/criar_ticket', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dados)
+                });
+                if (response.ok) {
+                    alert("Ticket criado com sucesso!");
+                    form.reset();
+                    carregarLista();
+                }
+            } catch (e) { alert("Erro ao criar ticket."); }
+        }
+    });
+
+    checkResolucao.addEventListener('change', () => {
+        if (!ticketConsultado || checkEdicao.checked) {
+            campoResolucao.disabled = !checkResolucao.checked;
+        }
+    });
+
+    // Inicialização da página
+    carregarLista();
 });
