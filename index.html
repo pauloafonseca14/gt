@@ -5,13 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão de Ticket</title>
     <link rel="stylesheet" href="estilo.css">
-    <script src="script.js"></script>
 </head>
 <body>
     <main>
+        <section id="nav-inicio" style="margin-bottom: 15px;">
+            <div id="btn_inicio" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; color: #0056b3; font-weight: bold;" title="Voltar ao Início / Novo Ticket">
+                <span style="font-size: 1.5rem;">🏠</span>
+                <span>Início / Novo Ticket</span>
+            </div>
+        </section>
+
         <section>
             <h1>Gestão de Tickets</h1>
-            <form action="/">
+            <form id="formTicket">
+                <div class="grid-item full-width" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
+                    <div class="checkbox-container" style="background: transparent; margin-bottom: 0;">
+                        <input type="checkbox" id="check_edicao" disabled>
+                        <label id="label_edicao" for="check_edicao" style="color: #6c757d; font-weight: bold;">Habilitar edição (Consultar primeiro)</label>
+                    </div>
+                </div>
+
                 <div class="grid-item">
                     <label class="titulo-campo">Tipo do Ticket:</label>
                     <div class="radio-group">
@@ -66,32 +79,36 @@
                 </div>
 
                 <div class="grid-item full-width">
-                    <label for="descricao">Descrição do Problema:</label>
-                    <textarea id="descricao_problema" name="descricao" rows="4" placeholder="Digite seu texto aqui ..."></textarea>
+                    <label for="descricao_problema">Descrição do Problema:</label>
+                    <textarea id="descricao_problema" name="descricao" rows="4"></textarea>
                 </div>
 
                 <div class="grid-item full-width">
-                    <label for="descricao">Descrição da Resolução:</label>
-                    <textarea id="descricao_resolução" name="descricao_resolucao" rows="4" placeholder="Bloqueado na ação Criar Ticket ..." disabled></textarea>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="check_resolucao">
+                        <label for="check_resolucao">Habilitar preenchimento da resolução</label>
+                    </div>
+                    <label for="descricao_resolução">Descrição da Resolução:</label>
+                    <textarea id="descricao_resolução" name="descricao_resolucao" rows="4" disabled></textarea>
                 </div>
 
                 <div class="grid-item full-width">
                     <label for="lista">Selecionar Ticket Existente:</label>
-                    <select id="lista" name="lista">
-                        </select>
+                    <select id="lista" name="lista"></select>
                 </div>
 
                 <div class="button-group full-width">
                     <button type="submit" id="criar_ticket" class="btn-principal">Criar Ticket</button>
                     <div class="acoes-secundarias">
-                        <button type="submit" id="consultar_ticket" disabled>Consultar</button>
-                        <button type="submit" id="atualizar_ticket" disabled>Atualizar</button>
-                        <button type="submit" id="excluir_ticket" disabled>Excluir</button>
-                        <button type="submit" id="encerrar_ticket" disabled>Encerrar</button>
+                        <button type="submit" id="consultar_ticket">Consultar</button>
+                        <button type="submit" id="atualizar_ticket">Atualizar</button>
+                        <button type="submit" id="excluir_ticket">Excluir</button>
+                        <button type="submit" id="encerrar_ticket">Encerrar</button>
                     </div>
                 </div>
             </form>
         </section>
     </main>
+    <script src="script.js"></script>
 </body>
 </html>
