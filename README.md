@@ -6,6 +6,8 @@ As funcionalidades do projeto envolve as implementações das etapas a seguir:
 2. Backend  [PYTHON/FASTAPI]
 3. Database [POSTGRES (runtime -> docker container)]
 
+Execução num repositório local, necessário instalar/importar bibliotecas listadas no __requirements.txt__
+
 
 
 
