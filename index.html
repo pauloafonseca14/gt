@@ -18,13 +18,6 @@
         <section>
             <h1>Gestão de Tickets</h1>
             <form id="formTicket">
-                <div class="grid-item full-width" style="background: #e9ecef; padding: 10px; border-radius: 6px; margin-bottom: 10px;">
-                    <div class="checkbox-container" style="background: transparent; margin-bottom: 0;">
-                        <input type="checkbox" id="check_edicao" disabled>
-                        <label id="label_edicao" for="check_edicao" style="color: #6c757d; font-weight: bold;">Habilitar edição (Consultar primeiro)</label>
-                    </div>
-                </div>
-
                 <div class="grid-item">
                     <label class="titulo-campo">Tipo do Ticket:</label>
                     <div class="radio-group">
@@ -81,6 +74,14 @@
                 <div class="grid-item full-width">
                     <label for="descricao_problema">Descrição do Problema:</label>
                     <textarea id="descricao_problema" name="descricao" rows="4"></textarea>
+                    
+                    <div id="area_atualizacao" style="margin-top: 15px;">
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="check_atualizacao">
+                            <label for="check_atualizacao" style="font-weight: bold; color: #0056b3;">Adicionar Atualizações no Ticket:</label>
+                        </div>
+                        <textarea id="txt_atualizacao" name="atualizacoes" rows="4" style="display: none; margin-top: 10px;" placeholder="Digite as novas informações do ticket..."></textarea>
+                    </div>
                 </div>
 
                 <div class="grid-item full-width">

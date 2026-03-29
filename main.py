@@ -1,6 +1,7 @@
 import json
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
+from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Column, String, Integer, create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -24,6 +25,8 @@ class TicketModel(Base):
     telefone_contato = Column(String)
     descricao = Column(String)
     nivel_suporte = Column(String)
+    # Melhoria: Campo para persistir as atualizações vinculadas
+    atualizacoes = Column(String, nullable=True)
 
 Base.metadata.create_all(bind=engine)
 
@@ -35,6 +38,8 @@ class Jsonfromjs(BaseModel):
     telefone_contato: str 
     descricao: str 
     nivel_suporte: str
+    # Melhoria: Campo opcional no Pydantic para receber a atualização
+    atualizacoes: Optional[str] = None
 
 app = FastAPI()
 
@@ -52,7 +57,6 @@ def get_db():
     finally:
         db.close()
 
-# Requisito 2: Endpoint para alimentar a lista drop-down automaticamente
 @app.get('/listar_tickets')
 async def listar_tickets(db: Session = Depends(get_db)):
     tickets = db.query(TicketModel).all()
@@ -75,7 +79,8 @@ async def criar_item(post_ticket: Jsonfromjs, db: Session = Depends(get_db)):
             email_contato=post_ticket.email_contato,
             telefone_contato=post_ticket.telefone_contato,
             descricao=post_ticket.descricao,
-            nivel_suporte=post_ticket.nivel_suporte
+            nivel_suporte=post_ticket.nivel_suporte,
+            atualizacoes=post_ticket.atualizacoes
         )
         db.add(novo_ticket_db)
         db.commit()
@@ -98,5 +103,23 @@ async def consultar_ticket(ticket_id: int, db: Session = Depends(get_db)):
         "email_contato": ticket.email_contato,
         "telefone_contato": ticket.telefone_contato,
         "descricao": ticket.descricao,
-        "nivel_suporte": ticket.nivel_suporte
+        "nivel_suporte": ticket.nivel_suporte,
+        "atualizacoes": ticket.atualizacoes # Retorna o conteúdo vinculado se houver
     }
+
+# Melhoria: Endpoint para persistir o conteúdo da textarea no BD
+@app.put('/atualizar_ticket/{ticket_id}')
+async def atualizar_ticket(ticket_id: int, dados: Jsonfromjs, db: Session = Depends(get_db)):
+    ticket_db = db.query(TicketModel).filter(TicketModel.id == ticket_id).first()
+    if not ticket_db:
+        raise HTTPException(status_code=404, detail="Ticket não encontrado")
+    
+    try:
+        # Vincula o novo conteúdo da textarea ao ticket sob consulta
+        ticket_db.atualizacoes = dados.atualizacoes
+        db.commit()
+        db.refresh(ticket_db)
+        return {"message": "Ticket atualizado com sucesso", "id": ticket_id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
