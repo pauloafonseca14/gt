@@ -6,9 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnInicio = document.getElementById('btn_inicio');
     const btnCriarTicket = document.getElementById('criar_ticket');
 
+    // --- NOVAS CONSTANTES INTEGRADAS ---
+    const inputOutraCategoria = document.getElementById('outra_categoria');
+    const campoResolucao = document.getElementById('descricao_resolução');
+    const checkResolucao = document.getElementById('check_resolucao');
+
     let ticketIdConsultado = null; 
 
-    // Função para carregar lista de tickets no drop-down
     async function carregarLista() {
         try {
             const response = await fetch('http://127.0.0.1:8000/listar_tickets');
@@ -28,13 +32,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Ação do ícone Início / Novo Ticket
     btnInicio.addEventListener('click', () => {
         form.reset();
         ticketIdConsultado = null;
         btnCriarTicket.disabled = false;
         
-        // Reset da área de atualização
         txtAtualizacao.style.display = 'none';
         txtAtualizacao.value = '';
         
@@ -42,25 +44,47 @@ document.addEventListener('DOMContentLoaded', () => {
         carregarLista();
     });
 
-    // Requisito 1 e 5: Função para bloquear ou liberar inputs
+    // Lógica de Bloqueio Atualizada para incluir os novos campos
     function gerenciarBloqueioCampos(bloquear) {
         const seletores = 'input:not(#check_atualizacao), textarea:not(#txt_atualizacao), select:not(#lista)';
         form.querySelectorAll(seletores).forEach(campo => {
             campo.disabled = bloquear;
         });
+
+        // Se estivermos desbloqueando (Novo Ticket), aplicamos a trava lógica inicial
+        if (!bloquear) {
+            inputOutraCategoria.disabled = !document.getElementById('catZ').checked;
+            campoResolucao.disabled = !checkResolucao.checked;
+        }
     }
 
-    // Requisito 3: Ação na checkbox de atualizações
+    // Ouvintes de evento para comportamento dinâmico (Idêntico ao script1)
+    form.addEventListener('change', (e) => {
+        if (e.target.name === 'categoria') {
+            const isOutro = document.getElementById('catZ').checked;
+            // Só altera se não estiver em modo de consulta bloqueado
+            if (!ticketIdConsultado) {
+                inputOutraCategoria.disabled = !isOutro;
+                if (!isOutro) inputOutraCategoria.value = "";
+            }
+        }
+    });
+
+    checkResolucao.addEventListener('change', () => {
+        if (!ticketIdConsultado) {
+            campoResolucao.disabled = !checkResolucao.checked;
+        }
+    });
+
     checkAtualizacao.addEventListener('change', () => {
         if (checkAtualizacao.checked) {
             txtAtualizacao.style.display = 'block';
-            txtAtualizacao.disabled = false; // Sempre habilitada para nova escrita se marcada
+            txtAtualizacao.disabled = false; 
         } else {
             txtAtualizacao.style.display = 'none';
         }
     });
 
-    // Requisito 1, 2 e 5: Consulta de Ticket
     async function consultarTicket(id) {
         form.reset();
         try {
@@ -70,12 +94,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ticketIdConsultado = id;
                 
                 preencherDados(d);
-                btnCriarTicket.disabled = true; // Bloqueia criação em modo consulta
-                
-                // Requisito 1: Inputs retornadas devem estar desabilitadas
-                gerenciarBloqueioCampos(true);
+                btnCriarTicket.disabled = true; 
+                gerenciarBloqueioCampos(true); // Bloqueia tudo, incluindo os novos campos
 
-                // Requisito 5: Se retornar conteúdo vinculado, exibe e desabilita
                 if (d.atualizacoes) {
                     checkAtualizacao.checked = true;
                     txtAtualizacao.value = d.atualizacoes;
@@ -102,13 +123,19 @@ document.addEventListener('DOMContentLoaded', () => {
             rCat.checked = true;
         } else {
             document.getElementById('catZ').checked = true;
-            document.getElementById('outra_categoria').value = d.categoria;
+            inputOutraCategoria.value = d.categoria;
         }
 
         document.getElementById('nome_contato').value = d.nome_contato;
         document.getElementById('email_contato').value = d.email_contato;
         document.getElementById('telefone_contato').value = d.telefone_contato;
         document.getElementById('descricao_problema').value = d.descricao;
+        
+        // Preenchimento do campo de resolução se existir no banco
+        if (d.resolucao) {
+            campoResolucao.value = d.resolucao;
+            checkResolucao.checked = true;
+        }
     }
 
     form.addEventListener('submit', async (e) => {
@@ -121,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
             else alert("Selecione um ticket.");
 
         } else if (acao === 'atualizar_ticket') {
-            // Requisito 4: Vincular e persistir conteúdo da textarea no BD
             if (!ticketIdConsultado) {
                 alert("Consulte um ticket antes de atualizar.");
                 return;
@@ -129,13 +155,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const dadosAtualizacao = {
                 ticket: form.ticket.value,
-                categoria: form.categoria.value === "Outro" ? form.outra_categoria.value : form.categoria.value,
+                categoria: form.categoria.value === "Outro" ? inputOutraCategoria.value : form.categoria.value,
                 nome_contato: form.nome_contato.value,
                 email_contato: form.email_contato.value,
                 telefone_contato: form.telefone_contato.value,
                 descricao: form.descricao.value,
                 nivel_suporte: form.nivel_suporte.value,
-                atualizacoes: txtAtualizacao.value // Conteúdo da nova textarea
+                atualizacoes: txtAtualizacao.value,
+                resolucao: checkResolucao.checked ? campoResolucao.value : null
             };
 
             try {
@@ -146,14 +173,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (response.ok) {
                     alert("Atualizações salvas com sucesso!");
-                    await consultarTicket(ticketIdConsultado); // Recarrega para bloquear campos
+                    await consultarTicket(ticketIdConsultado); 
                 }
             } catch (e) { alert("Erro ao atualizar ticket."); }
 
         } else if (acao === 'criar_ticket') {
             const formData = new FormData(form);
             const dados = Object.fromEntries(formData.entries());
-            if (dados.categoria === "Outro") dados.categoria = dados.outra_categoria;
+            
+            if (dados.categoria === "Outro") dados.categoria = inputOutraCategoria.value;
+            if (checkResolucao.checked) dados.resolucao = campoResolucao.value;
 
             try {
                 const response = await fetch('http://127.0.0.1:8000/criar_ticket', {
