@@ -95,7 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // MELHORIA ITEM 2: Checkbox sempre habilitada e pronta para nova interação
                 checkAtualizacao.disabled = false; 
                 checkAtualizacao.checked = false; // Começa desmarcada para evitar o "desmarcar e marcar"
-                txtAtualizacao.style.display = 'none';
+                txtAtualizacao.style.display = 'block';
+                txtAtualizacao.disabled = true;
 
                 // Se quiser apenas MOSTRAR que existe algo mas permitir nova edição:
                 if (d.atualizacoes) {
