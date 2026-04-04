@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnInicio = document.getElementById('btn_inicio');
     const btnCriarTicket = document.getElementById('criar_ticket');
 
-    // --- NOVAS CONSTANTES INTEGRADAS ---
     const inputOutraCategoria = document.getElementById('outra_categoria');
     const campoResolucao = document.getElementById('descricao_resolução');
     const checkResolucao = document.getElementById('check_resolucao');
@@ -44,25 +43,21 @@ document.addEventListener('DOMContentLoaded', () => {
         carregarLista();
     });
 
-    // Lógica de Bloqueio Atualizada para incluir os novos campos
     function gerenciarBloqueioCampos(bloquear) {
         const seletores = 'input:not(#check_atualizacao), textarea:not(#txt_atualizacao), select:not(#lista)';
         form.querySelectorAll(seletores).forEach(campo => {
             campo.disabled = bloquear;
         });
 
-        // Se estivermos desbloqueando (Novo Ticket), aplicamos a trava lógica inicial
         if (!bloquear) {
             inputOutraCategoria.disabled = !document.getElementById('catZ').checked;
             campoResolucao.disabled = !checkResolucao.checked;
         }
     }
 
-    // Ouvintes de evento para comportamento dinâmico (Idêntico ao script1)
     form.addEventListener('change', (e) => {
         if (e.target.name === 'categoria') {
             const isOutro = document.getElementById('catZ').checked;
-            // Só altera se não estiver em modo de consulta bloqueado
             if (!ticketIdConsultado) {
                 inputOutraCategoria.disabled = !isOutro;
                 if (!isOutro) inputOutraCategoria.value = "";
@@ -95,12 +90,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 preencherDados(d);
                 btnCriarTicket.disabled = true; 
-                gerenciarBloqueioCampos(true); // Bloqueia tudo, incluindo os novos campos
+                gerenciarBloqueioCampos(true); 
+
+                // Ajuste Requisito 2: Checkbox sempre disponível para nova atualização
+                checkAtualizacao.disabled = false; 
 
                 if (d.atualizacoes) {
                     checkAtualizacao.checked = true;
                     txtAtualizacao.value = d.atualizacoes;
                     txtAtualizacao.style.display = 'block';
+                    // Mantém desabilitado apenas o texto vindo do banco até que se queira editar
                     txtAtualizacao.disabled = true; 
                 } else {
                     checkAtualizacao.checked = false;
@@ -131,7 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('telefone_contato').value = d.telefone_contato;
         document.getElementById('descricao_problema').value = d.descricao;
         
-        // Preenchimento do campo de resolução se existir no banco
         if (d.resolucao) {
             campoResolucao.value = d.resolucao;
             checkResolucao.checked = true;
@@ -173,7 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (response.ok) {
                     alert("Atualizações salvas com sucesso!");
-                    await consultarTicket(ticketIdConsultado); 
+                    
+                    // Ajuste Requisito 1: Reiniciar interface após sucesso
+                    form.reset();
+                    ticketIdConsultado = null;
+                    btnCriarTicket.disabled = false;
+                    txtAtualizacao.style.display = 'none';
+                    gerenciarBloqueioCampos(false);
+                    carregarLista();
                 }
             } catch (e) { alert("Erro ao atualizar ticket."); }
 
