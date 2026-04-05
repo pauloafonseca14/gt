@@ -80,6 +80,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    form.addEventListener('change', (e) => {
+            if (e.target.name === 'categoria') {
+                const isOutro = document.getElementById('catZ').checked;
+                if (!ticketIdConsultado) {
+                    inputOutraCategoria.disabled = !isOutro;
+                    if (!isOutro) inputOutraCategoria.value = "";
+                }
+            }
+        });
+
     // ITEM 2: Consultar Ticket e mapear informação da lista
     async function consultarTicket(id) {
         // Mapeia a informação resumida selecionada na lista antes do reset do form
