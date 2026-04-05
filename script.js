@@ -91,12 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 preencherDados(d);
                 btnCriarTicket.disabled = true; 
                 gerenciarBloqueioCampos(true); 
-<<<<<<< HEAD
 
                 // Ajuste Requisito 2: Checkbox sempre disponível para nova atualização
                 checkAtualizacao.disabled = false; 
-=======
->>>>>>> feature03
 
                 // MELHORIA ITEM 2: Checkbox sempre habilitada e pronta para nova interação
                 checkAtualizacao.disabled = false; 
@@ -107,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Se quiser apenas MOSTRAR que existe algo mas permitir nova edição:
                 if (d.atualizacoes) {
                     txtAtualizacao.value = d.atualizacoes;
-<<<<<<< HEAD
                     txtAtualizacao.style.display = 'block';
                     // Mantém desabilitado apenas o texto vindo do banco até que se queira editar
                     txtAtualizacao.disabled = true; 
@@ -115,9 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     checkAtualizacao.checked = false;
                     txtAtualizacao.style.display = 'none';
                     txtAtualizacao.value = '';
-=======
-                    // Mantemos escondido até o usuário clicar na checkbox
->>>>>>> feature03
                 }
             }
         } catch (e) { alert("Erro ao consultar ticket."); }
@@ -185,11 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     alert("Atualizações salvas com sucesso!");
                     
-<<<<<<< HEAD
                     // Ajuste Requisito 1: Reiniciar interface após sucesso
-=======
-                    // MELHORIA ITEM 1: Reiniciar interface após sucesso
->>>>>>> feature03
                     form.reset();
                     ticketIdConsultado = null;
                     btnCriarTicket.disabled = false;
