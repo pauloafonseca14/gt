@@ -1,9 +1,10 @@
 import json
+from datetime import datetime
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import Column, String, Integer, create_engine
+from sqlalchemy import Column, String, Integer, DateTime, create_engine # Adicionado DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 import strdb
@@ -25,8 +26,9 @@ class TicketModel(Base):
     telefone_contato = Column(String)
     descricao = Column(String)
     nivel_suporte = Column(String)
-    # Melhoria: Campo para persistir as atualizações vinculadas
     atualizacoes = Column(String, nullable=True)
+    # Melhoria: Coluna para armazenar a data e hora exata da criação para o cálculo de SLA
+    data_criacao = Column(DateTime, default=datetime.now) #
 
 Base.metadata.create_all(bind=engine)
 
@@ -38,7 +40,6 @@ class Jsonfromjs(BaseModel):
     telefone_contato: str 
     descricao: str 
     nivel_suporte: str
-    # Melhoria: Campo opcional no Pydantic para receber a atualização
     atualizacoes: Optional[str] = None
 
 app = FastAPI()
@@ -65,7 +66,9 @@ async def listar_tickets(db: Session = Depends(get_db)):
             "id": t.id,
             "ticket": t.ticket_ref,
             "nivel_suporte": t.nivel_suporte,
-            "categoria": t.categoria
+            "categoria": t.categoria,
+            # Melhoria: Enviando a data de criação formatada para o front-end calcular o SLA
+            "data_criacao": t.data_criacao.isoformat() #
         } for t in tickets
     ]
 
@@ -81,6 +84,7 @@ async def criar_item(post_ticket: Jsonfromjs, db: Session = Depends(get_db)):
             descricao=post_ticket.descricao,
             nivel_suporte=post_ticket.nivel_suporte,
             atualizacoes=post_ticket.atualizacoes
+            # data_criacao é preenchida automaticamente pelo default=datetime.now
         )
         db.add(novo_ticket_db)
         db.commit()
@@ -104,10 +108,10 @@ async def consultar_ticket(ticket_id: int, db: Session = Depends(get_db)):
         "telefone_contato": ticket.telefone_contato,
         "descricao": ticket.descricao,
         "nivel_suporte": ticket.nivel_suporte,
-        "atualizacoes": ticket.atualizacoes # Retorna o conteúdo vinculado se houver
+        "atualizacoes": ticket.atualizacoes,
+        "data_criacao": ticket.data_criacao.isoformat()
     }
 
-# Melhoria: Endpoint para persistir o conteúdo da textarea no BD
 @app.put('/atualizar_ticket/{ticket_id}')
 async def atualizar_ticket(ticket_id: int, dados: Jsonfromjs, db: Session = Depends(get_db)):
     ticket_db = db.query(TicketModel).filter(TicketModel.id == ticket_id).first()
@@ -115,7 +119,6 @@ async def atualizar_ticket(ticket_id: int, dados: Jsonfromjs, db: Session = Depe
         raise HTTPException(status_code=404, detail="Ticket não encontrado")
     
     try:
-        # Vincula o novo conteúdo da textarea ao ticket sob consulta
         ticket_db.atualizacoes = dados.atualizacoes
         db.commit()
         db.refresh(ticket_db)

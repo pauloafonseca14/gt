@@ -12,6 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let ticketIdConsultado = null; 
 
+    // ITEM 2b: Função para calcular o progresso do SLA
+    function calcularSLA(dataCriacao, tipoTicket) {
+        const inicio = new Date(dataCriacao);
+        const agora = new Date();
+        const diffHoras = (agora - inicio) / (1000 * 60 * 60);
+        
+        // Define o limite baseado no valor do rádio (16h para Requisição, 4h para Incidente)
+        const limite = tipoTicket.includes("Incidente") ? 4 : 16;
+        const progresso = Math.min((diffHoras / limite) * 100, 100).toFixed(1);
+        
+        return progresso >= 100 ? "⚠️ SLA Vencido" : `⏳ ${progresso}%`;
+    }
+
+    // ITEM 2b: Carregar lista com a progressão do SLA
     async function carregarLista() {
         try {
             const response = await fetch('http://127.0.0.1:8000/listar_tickets');
@@ -19,9 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tickets = await response.json();
                 listaTickets.innerHTML = '<option value="" disabled selected>Escolher ticket</option>';
                 tickets.forEach(t => {
+                    const slaStatus = calcularSLA(t.data_criacao, t.ticket);
                     const opt = document.createElement('option');
                     opt.value = t.id;
-                    opt.textContent = `#${t.id} | ${t.ticket} | ${t.nivel_suporte} | ${t.categoria}`;
+                    // Versão minimalista: ID | Progresso | Tipo | Nível
+                    opt.textContent = `#${t.id} | ${slaStatus} | ${t.ticket} | ${t.nivel_suporte}`;
                     listaTickets.appendChild(opt);
                 });
             }
@@ -31,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ITEM 1 & 2a: Resetar interface e garantir checkboxes desabilitadas
     btnInicio.addEventListener('click', () => {
         form.reset();
         ticketIdConsultado = null;
@@ -41,15 +58,20 @@ document.addEventListener('DOMContentLoaded', () => {
         carregarLista();
     });
 
+    // ITEM 2a: Gerenciar bloqueio e estado inicial das checkboxes
     function gerenciarBloqueioCampos(bloquear) {
-        const seletores = 'input:not(#check_atualizacao), textarea:not(#txt_atualizacao), select:not(#lista)';
+        // Bloqueia campos principais. Checkboxes são tratadas especificamente abaixo.
+        const seletores = 'input:not(#check_atualizacao):not(#check_resolucao), textarea:not(#txt_atualizacao), select:not(#lista)';
         form.querySelectorAll(seletores).forEach(campo => {
             campo.disabled = bloquear;
         });
 
         if (!bloquear) {
-            inputOutraCategoria.disabled = !document.getElementById('catZ').checked;
-            campoResolucao.disabled = !checkResolucao.checked;
+            // Se estamos limpando o formulário para um novo ticket
+            inputOutraCategoria.disabled = true;
+            campoResolucao.disabled = true;
+            checkAtualizacao.disabled = true; // Desabilitado no início (Item 1)
+            checkResolucao.disabled = true;   // Desabilitado no início (Item 1)
         }
     }
 
@@ -64,22 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     checkResolucao.addEventListener('change', () => {
-        if (!ticketIdConsultado) {
-            campoResolucao.disabled = !checkResolucao.checked;
-        }
+        campoResolucao.disabled = !checkResolucao.checked;
     });
 
     checkAtualizacao.addEventListener('change', () => {
         if (checkAtualizacao.checked) {
             txtAtualizacao.style.display = 'block';
             txtAtualizacao.disabled = false; 
-            // Opcional: limpa o texto antigo ao marcar para garantir que o usuário escreva algo novo
-            // txtAtualizacao.value = ''; 
         } else {
             txtAtualizacao.style.display = 'none';
         }
     });
 
+    // ITEM 2c: Habilitar checkboxes após consulta
     async function consultarTicket(id) {
         form.reset();
         try {
@@ -92,16 +111,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnCriarTicket.disabled = true; 
                 gerenciarBloqueioCampos(true); 
 
-                // MELHORIA ITEM 2: Checkbox sempre habilitada e pronta para nova interação
+                // Habilita as checkboxes para interação no ticket consultado
                 checkAtualizacao.disabled = false; 
-                checkAtualizacao.checked = false; // Começa desmarcada para evitar o "desmarcar e marcar"
-                txtAtualizacao.style.display = 'block';
-                txtAtualizacao.disabled = true;
+                checkResolucao.disabled = false;
+                checkAtualizacao.checked = false;
+                txtAtualizacao.style.display = 'none';
 
-                // Se quiser apenas MOSTRAR que existe algo mas permitir nova edição:
                 if (d.atualizacoes) {
                     txtAtualizacao.value = d.atualizacoes;
-                    // Mantemos escondido até o usuário clicar na checkbox
                 }
             }
         } catch (e) { alert("Erro ao consultar ticket."); }
@@ -126,11 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('email_contato').value = d.email_contato;
         document.getElementById('telefone_contato').value = d.telefone_contato;
         document.getElementById('descricao_problema').value = d.descricao;
-        
-        if (d.resolucao) {
-            campoResolucao.value = d.resolucao;
-            checkResolucao.checked = true;
-        }
     }
 
     form.addEventListener('submit', async (e) => {
@@ -156,8 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 telefone_contato: form.telefone_contato.value,
                 descricao: form.descricao.value,
                 nivel_suporte: form.nivel_suporte.value,
-                atualizacoes: txtAtualizacao.value,
-                resolucao: checkResolucao.checked ? campoResolucao.value : null
+                atualizacoes: txtAtualizacao.value
             };
 
             try {
@@ -168,14 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (response.ok) {
                     alert("Atualizações salvas com sucesso!");
-                    
-                    // MELHORIA ITEM 1: Reiniciar interface após sucesso
-                    form.reset();
-                    ticketIdConsultado = null;
-                    btnCriarTicket.disabled = false;
-                    txtAtualizacao.style.display = 'none';
-                    gerenciarBloqueioCampos(false);
-                    carregarLista();
+                    btnInicio.click(); // Usa a lógica de reset do botão início
                 }
             } catch (e) { alert("Erro ao atualizar ticket."); }
 
@@ -184,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const dados = Object.fromEntries(formData.entries());
             
             if (dados.categoria === "Outro") dados.categoria = inputOutraCategoria.value;
-            if (checkResolucao.checked) dados.resolucao = campoResolucao.value;
 
             try {
                 const response = await fetch('http://127.0.0.1:8000/criar_ticket', {
@@ -195,11 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     alert("Ticket criado com sucesso!");
                     form.reset();
+                    gerenciarBloqueioCampos(false);
                     carregarLista();
                 }
             } catch (e) { alert("Erro ao criar ticket."); }
         }
     });
 
+    // Inicialização
+    gerenciarBloqueioCampos(false);
     carregarLista();
 });
