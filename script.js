@@ -111,21 +111,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnCriarTicket.disabled = true; 
                 gerenciarBloqueioCampos(true); 
 
-<<<<<<< HEAD
                 // Ajuste Requisito 2: Checkbox sempre disponível para nova atualização
                 checkAtualizacao.disabled = false; 
 
                 // MELHORIA ITEM 2: Checkbox sempre habilitada e pronta para nova interação
                 // Habilita as checkboxes para interação no ticket consultado
-=======
-                // Habilita as checkboxes após a consulta
->>>>>>> feature03
                 checkAtualizacao.disabled = false; 
                 checkResolucao.disabled = false;
                 checkAtualizacao.checked = false;
                 txtAtualizacao.style.display = 'none';
 
-<<<<<<< HEAD
                 if (d.atualizacoes) {
                     txtAtualizacao.value = d.atualizacoes;
                     txtAtualizacao.style.display = 'block';
@@ -136,9 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     txtAtualizacao.style.display = 'none';
                     txtAtualizacao.value = '';
                 }
-=======
-                if (d.atualizacoes) txtAtualizacao.value = d.atualizacoes;
->>>>>>> feature03
             }
         } catch (e) { alert("Erro ao consultar ticket."); }
     }
@@ -209,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(dadosAtualizacao)
                 });
                 if (response.ok) {
-<<<<<<< HEAD
                     alert("Atualizações salvas com sucesso!");
                     
                     // Ajuste Requisito 1: Reiniciar interface após sucesso
@@ -220,10 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     gerenciarBloqueioCampos(false);
                     carregarLista();
                     btnInicio.click(); // Usa a lógica de reset do botão início
-=======
-                    alert("Ticket atualizado!");
-                    btnInicio.click();
->>>>>>> feature03
                 }
             } catch (e) { alert("Erro ao atualizar."); }
 
