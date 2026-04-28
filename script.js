@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 listaTickets.innerHTML = '<option value="" disabled selected>Escolher ticket</option>';
                 
                 tickets.forEach(t => {
-                    // Requisito: Ticket sob consulta não aparece na lista
                     if (ticketIdConsultado && t.id == ticketIdConsultado) return;
 
                     const opt = document.createElement('option');
@@ -43,12 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 form.reset();
                 preencherDados(d);
 
-                inputTicketConsulta.value = infoTexto; // Mantém a visualização rica do status
+                inputTicketConsulta.value = infoTexto; 
                 
                 btnCriarTicket.disabled = true;
                 gerenciarBloqueioCampos(true);
                 
-                // Habilita checkboxes de interação (Original script1.js)
                 checkAtualizacao.disabled = false; 
                 checkResolucao.disabled = false;
 
@@ -58,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     txtAtualizacao.disabled = true; 
                 }
                 
-                carregarLista(); // Atualiza para ocultar o consultado
+                carregarLista();
             }
         } catch (e) { alert("Erro ao consultar"); }
     }
@@ -69,11 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
         inputTicketConsulta.value = "";
         btnCriarTicket.disabled = false;
         txtAtualizacao.style.display = 'none';
+        campoResolucao.disabled = true; // Garante que o campo de resolução volte a ficar bloqueado
         gerenciarBloqueioCampos(false);
         carregarLista();
     });
 
-    // Lógica original de categoria "Outro"
     form.addEventListener('change', (e) => {
         if (e.target.name === 'categoria') {
             const isOutro = document.getElementById('catZ').checked;
@@ -106,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else alert("Selecione um ticket.");
         } 
         else if (acao === 'atualizar_ticket' || acao === 'encerrar_ticket') {
+            // Melhoria: Coleta o conteúdo de resolucao somente no encerramento
             const dados = {
                 ticket: form.ticket.value,
                 categoria: form.categoria.value === "Outro" ? inputOutraCategoria.value : form.categoria.value,
@@ -115,15 +114,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 descricao: document.getElementById('descricao_problema').value,
                 nivel_suporte: form.nivel_suporte.value,
                 atualizacoes: txtAtualizacao.value,
+                resolucao: acao === 'encerrar_ticket' ? campoResolucao.value : null, // Envio do novo campo
                 status: acao === 'encerrar_ticket' ? "Encerrado" : null
             };
             
-            await fetch(`http://127.0.0.1:8000/atualizar_ticket/${ticketIdConsultado}`, {
+            const response = await fetch(`http://127.0.0.1:8000/atualizar_ticket/${ticketIdConsultado}`, {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(dados)
             });
-            btnInicio.click();
+
+            if (response.ok) {
+                btnInicio.click();
+            } else {
+                alert("Erro ao processar a solicitação.");
+            }
         }
         else if (acao === 'criar_ticket') {
             const formData = new FormData(form);
@@ -140,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function gerenciarBloqueioCampos(bloquear) {
-        const seletores = 'input:not(#check_atualizacao):not(#check_resolucao), textarea:not(#txt_atualizacao), select:not(#lista)';
+        const seletores = 'input:not(#check_atualizacao):not(#check_resolucao), textarea:not(#txt_atualizacao):not(#descricao_resolução), select:not(#lista)';
         form.querySelectorAll(seletores).forEach(c => c.disabled = bloquear);
         if (!bloquear) {
             inputOutraCategoria.disabled = true;
@@ -156,6 +161,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('telefone_contato').value = d.telefone_contato;
         document.getElementById('descricao_problema').value = d.descricao;
         
+        // Melhoria: Preenche o campo de resolução com os dados vindos do BD
+        if (d.resolucao) {
+            campoResolucao.value = d.resolucao;
+        }
+
         const rTicket = form.querySelector(`input[name="ticket"][value="${d.ticket}"]`);
         if(rTicket) rTicket.checked = true;
         const rNivel = form.querySelector(`input[name="nivel_suporte"][value="${d.nivel_suporte}"]`);

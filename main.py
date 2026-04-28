@@ -26,8 +26,9 @@ class TicketModel(Base):
     descricao = Column(String)
     nivel_suporte = Column(String)
     atualizacoes = Column(String, nullable=True)
+    resolucao = Column(String, nullable=True)  # Melhoria: Campo para o texto de encerramento
     data_criacao = Column(DateTime, default=datetime.now)
-    status = Column(String, default="Aberto/Em Progresso") # Persistência de status
+    status = Column(String, default="Aberto/Em Progresso")
 
 Base.metadata.create_all(bind=engine)
 
@@ -56,6 +57,7 @@ class Jsonfromjs(BaseModel):
     descricao: str 
     nivel_suporte: str
     atualizacoes: Optional[str] = None
+    resolucao: Optional[str] = None  # Melhoria: Novo campo no Schema Pydantic
     status: Optional[str] = None
 
 app = FastAPI()
@@ -71,7 +73,7 @@ async def listar_tickets(db: Session = Depends(get_db)):
     tickets = db.query(TicketModel).all()
     lista_retorno = []
     for t in tickets:
-        # Atualização transparente no BD durante a listagem
+        # Atualização transparente no BD durante a listagem (SLA)
         novo_status = calcular_status_sla(t)
         if t.status != novo_status:
             t.status = novo_status
@@ -109,6 +111,7 @@ async def consultar_ticket(ticket_id: int, db: Session = Depends(get_db)):
         "descricao": ticket.descricao,
         "nivel_suporte": ticket.nivel_suporte,
         "atualizacoes": ticket.atualizacoes,
+        "resolucao": ticket.resolucao,  # Melhoria: Retorno do texto de resolução
         "status": ticket.status,
         "data_criacao": ticket.data_criacao.isoformat()
     }
@@ -116,7 +119,6 @@ async def consultar_ticket(ticket_id: int, db: Session = Depends(get_db)):
 @app.post('/criar_ticket')
 async def criar_item(post_ticket: Jsonfromjs, db: Session = Depends(get_db)):
     try:
-        # Mapeamento correto para evitar o erro de keyword 'ticket'
         novo_ticket = TicketModel(
             ticket_ref=post_ticket.ticket,
             categoria=post_ticket.categoria,
@@ -143,8 +145,15 @@ async def atualizar_ticket(ticket_id: int, dados: Jsonfromjs, db: Session = Depe
         raise HTTPException(status_code=404, detail="Ticket não encontrado")
     
     try:
-        if dados.status: ticket_db.status = dados.status
+        # Atualiza campos se fornecidos no JSON
+        if dados.status: 
+            ticket_db.status = dados.status
+        
+        # Melhoria: Persiste as atualizações textuais e a resolução de encerramento
         ticket_db.atualizacoes = dados.atualizacoes
+        if dados.resolucao:
+            ticket_db.resolucao = dados.resolucao
+            
         db.commit()
         return {"message": "Sucesso"}
     except Exception as e:
