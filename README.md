@@ -1,10 +1,10 @@
 Repositório dos arquivos do Projeto: [__Sistema Gestao de Ticket__](https://github.com/users/pauloafonseca14/projects/1/views/1)
 
-As funcionalidades do projeto envolve as implementações das etapas a seguir:
+As funcionalidades do projeto envolve implementações das camadas a seguir:
 
-1. Frontend [HTML/JS]
-2. Backend  [PYTHON/FASTAPI]
-3. Database [POSTGRES (runtime -> docker container)]
+* ![Static Badge](https://img.shields.io/badge/frontend-html%2Fjavascript-blue)
+* ![Static Badge](https://img.shields.io/badge/backend-python-green)
+* ![Static Badge](https://img.shields.io/badge/database-postgres-orange)
 
 Requisitos para execução do backend/BD num repositório local:
 
@@ -12,7 +12,7 @@ Requisitos para execução do backend/BD num repositório local:
 5. Instalação do Docker Desktop/CLI;
 6. Baixa de uma imagem Postgres pelo Docker Desktop/CLI;
 7. Instalação/importação das bibliotecas listadas no __requirements.txt__;
-8. Inicialização da instância do Postgres num container, por meio da execução 'docker compose'.
+8. Inicialização da instância do Postgres.
 
 
 
