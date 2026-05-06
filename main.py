@@ -26,8 +26,10 @@ class TicketModel(Base):
     descricao = Column(String)
     nivel_suporte = Column(String)
     atualizacoes = Column(String, nullable=True)
-    resolucao = Column(String, nullable=True)  # Melhoria: Campo para o texto de encerramento
+    resolucao = Column(String, nullable=True)
     data_criacao = Column(DateTime, default=datetime.now)
+    # Novo campo para persistência da data de encerramento
+    data_encerramento = Column(DateTime, nullable=True) 
     status = Column(String, default="Aberto/Em Progresso")
 
 Base.metadata.create_all(bind=engine)
@@ -57,8 +59,10 @@ class Jsonfromjs(BaseModel):
     descricao: str 
     nivel_suporte: str
     atualizacoes: Optional[str] = None
-    resolucao: Optional[str] = None  # Melhoria: Novo campo no Schema Pydantic
+    resolucao: Optional[str] = None
     status: Optional[str] = None
+    # Novo campo no Schema para receber a data do sistema do usuário
+    data_encerramento: Optional[str] = None 
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -111,9 +115,11 @@ async def consultar_ticket(ticket_id: int, db: Session = Depends(get_db)):
         "descricao": ticket.descricao,
         "nivel_suporte": ticket.nivel_suporte,
         "atualizacoes": ticket.atualizacoes,
-        "resolucao": ticket.resolucao,  # Melhoria: Retorno do texto de resolução
+        "resolucao": ticket.resolucao,
         "status": ticket.status,
-        "data_criacao": ticket.data_criacao.isoformat()
+        "data_criacao": ticket.data_criacao.isoformat(),
+        # Incluído no retorno para consulta caso já esteja encerrado
+        "data_encerramento": ticket.data_encerramento.isoformat() if ticket.data_encerramento else None
     }
 
 @app.post('/criar_ticket')
@@ -145,12 +151,15 @@ async def atualizar_ticket(ticket_id: int, dados: Jsonfromjs, db: Session = Depe
         raise HTTPException(status_code=404, detail="Ticket não encontrado")
     
     try:
-        # Atualiza campos se fornecidos no JSON
+        # Atualiza status e captura data de encerramento se enviada
         if dados.status: 
             ticket_db.status = dados.status
+            if dados.status == "Encerrado" and dados.data_encerramento:
+                # Converte a string ISO enviada pelo JavaScript para objeto datetime do Python
+                ticket_db.data_encerramento = datetime.fromisoformat(dados.data_encerramento.replace('Z', '+00:00'))
         
-        # Melhoria: Persiste as atualizações textuais e a resolução de encerramento
         ticket_db.atualizacoes = dados.atualizacoes
+        
         if dados.resolucao:
             ticket_db.resolucao = dados.resolucao
             
