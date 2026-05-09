@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputTicketConsulta.value = "";
         btnCriarTicket.disabled = false;
         txtAtualizacao.style.display = 'none';
-        campoResolucao.disabled = true; // Garante que o campo de resolução volte a ficar bloqueado
+        campoResolucao.disabled = true; 
         gerenciarBloqueioCampos(false);
         carregarLista();
     });
@@ -104,7 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
             else alert("Selecione um ticket.");
         } 
         else if (acao === 'atualizar_ticket' || acao === 'encerrar_ticket') {
-            // Melhoria: Coleta o conteúdo de resolucao somente no encerramento
+            // Define a data de encerramento apenas se o botão clicado for o de encerrar[cite: 2]
+            const dataEncerramento = acao === 'encerrar_ticket' ? new Date().toISOString() : null;
+
             const dados = {
                 ticket: form.ticket.value,
                 categoria: form.categoria.value === "Outro" ? inputOutraCategoria.value : form.categoria.value,
@@ -114,8 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 descricao: document.getElementById('descricao_problema').value,
                 nivel_suporte: form.nivel_suporte.value,
                 atualizacoes: txtAtualizacao.value,
-                resolucao: acao === 'encerrar_ticket' ? campoResolucao.value : null, // Envio do novo campo
-                status: acao === 'encerrar_ticket' ? "Encerrado" : null
+                resolucao: acao === 'encerrar_ticket' ? campoResolucao.value : null, 
+                status: acao === 'encerrar_ticket' ? "Encerrado" : null,
+                data_encerramento: dataEncerramento // Novo campo enviado ao backend[cite: 1]
             };
             
             const response = await fetch(`http://127.0.0.1:8000/atualizar_ticket/${ticketIdConsultado}`, {
@@ -161,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('telefone_contato').value = d.telefone_contato;
         document.getElementById('descricao_problema').value = d.descricao;
         
-        // Melhoria: Preenche o campo de resolução com os dados vindos do BD
         if (d.resolucao) {
             campoResolucao.value = d.resolucao;
         }
@@ -173,9 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const rCat = form.querySelector(`input[name="categoria"][value="${d.categoria}"]`);
         if(rCat) rCat.checked = true; 
         else {
-            document.getElementById('catZ').checked = true;
-            inputOutraCategoria.value = d.categoria;
-            inputOutraCategoria.disabled = true;
+            const catZ = document.getElementById('catZ');
+            if (catZ) {
+                catZ.checked = true;
+                inputOutraCategoria.value = d.categoria;
+                inputOutraCategoria.disabled = true;
+            }
         }
     }
 
