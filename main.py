@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
@@ -28,13 +28,11 @@ class TicketModel(Base):
     atualizacoes = Column(String, nullable=True)
     resolucao = Column(String, nullable=True)
     data_criacao = Column(DateTime, default=datetime.now)
-    # Novo campo para persistência da data de encerramento
     data_encerramento = Column(DateTime, nullable=True) 
     status = Column(String, default="Aberto/Em Progresso")
 
 Base.metadata.create_all(bind=engine)
 
-# Função para atualizar status com base no tempo (SLA) de forma automática
 def calcular_status_sla(ticket: TicketModel):
     if ticket.status == "Encerrado":
         return "Encerrado"
@@ -43,7 +41,6 @@ def calcular_status_sla(ticket: TicketModel):
     diff = agora - ticket.data_criacao
     horas_passadas = diff.total_seconds() / 3600
     
-    # Regra original: 4h Incidente, 16h Requisição
     limite = 4 if "Incidente" in (ticket.ticket_ref or "") else 16
     
     if horas_passadas >= limite:
@@ -61,7 +58,6 @@ class Jsonfromjs(BaseModel):
     atualizacoes: Optional[str] = None
     resolucao: Optional[str] = None
     status: Optional[str] = None
-    # Novo campo no Schema para receber a data do sistema do usuário
     data_encerramento: Optional[str] = None 
 
 app = FastAPI()
@@ -77,7 +73,6 @@ async def listar_tickets(db: Session = Depends(get_db)):
     tickets = db.query(TicketModel).all()
     lista_retorno = []
     for t in tickets:
-        # Atualização transparente no BD durante a listagem (SLA)
         novo_status = calcular_status_sla(t)
         if t.status != novo_status:
             t.status = novo_status
@@ -98,7 +93,6 @@ async def consultar_ticket(ticket_id: int, db: Session = Depends(get_db)):
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket não encontrado")
     
-    # Atualização transparente no BD durante a consulta
     novo_status = calcular_status_sla(ticket)
     if ticket.status != novo_status:
         ticket.status = novo_status
@@ -118,7 +112,6 @@ async def consultar_ticket(ticket_id: int, db: Session = Depends(get_db)):
         "resolucao": ticket.resolucao,
         "status": ticket.status,
         "data_criacao": ticket.data_criacao.isoformat(),
-        # Incluído no retorno para consulta caso já esteja encerrado
         "data_encerramento": ticket.data_encerramento.isoformat() if ticket.data_encerramento else None
     }
 
@@ -151,12 +144,19 @@ async def atualizar_ticket(ticket_id: int, dados: Jsonfromjs, db: Session = Depe
         raise HTTPException(status_code=404, detail="Ticket não encontrado")
     
     try:
-        # Atualiza status e captura data de encerramento se enviada
         if dados.status: 
             ticket_db.status = dados.status
             if dados.status == "Encerrado" and dados.data_encerramento:
-                # Converte a string ISO enviada pelo JavaScript para objeto datetime do Python
-                ticket_db.data_encerramento = datetime.fromisoformat(dados.data_encerramento.replace('Z', '+00:00'))
+                # 1. Converte a string do JS (UTC) para objeto datetime
+                # O replace trata o formato 'Z' como fuso zero.
+                dt_utc = datetime.fromisoformat(dados.data_encerramento.replace('Z', '+00:00'))
+                
+                # 2. Define o fuso horário de Brasília (UTC-3)
+                tz_brasilia = timezone(timedelta(hours=-3))
+                
+                # 3. Converte o horário UTC para o horário de Brasília e remove a info de fuso 
+                # para salvar no banco como DateTime "ingênuo" (compatível com seu model)
+                ticket_db.data_encerramento = dt_utc.astimezone(tz_brasilia).replace(tzinfo=None)
         
         ticket_db.atualizacoes = dados.atualizacoes
         
