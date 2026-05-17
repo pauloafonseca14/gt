@@ -168,3 +168,56 @@ async def atualizar_ticket(ticket_id: int, dados: Jsonfromjs, db: Session = Depe
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get('/gerar_relatorio')
+async def gerar_relatorio(
+    ticket: Optional[str] = None,
+    nivel_suporte: Optional[str] = None,
+    categoria: Optional[str] = None,
+    status: Optional[str] = None,
+    com_atualizacao: Optional[bool] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(TicketModel)
+    
+    # Aplicação dinâmica dos filtros fornecidos por query parameters
+    if ticket:
+        query = query.filter(TicketModel.ticket_ref == ticket)
+    if nivel_suporte:
+        query = query.filter(TicketModel.nivel_suporte == nivel_suporte)
+    if categoria:
+        query = query.filter(TicketModel.categoria == categoria)
+    if com_atualizacao:
+        query = query.filter(TicketModel.atualizacoes.isnot(None), TicketModel.atualizacoes != "")
+
+    tickets = query.all()
+    lista_filtrada = []
+
+    for t in tickets:
+        # Recalcula e atualiza o SLA dinâmico caso tenha estourado o tempo limite
+        novo_status = calcular_status_sla(t)
+        if t.status != novo_status:
+            t.status = novo_status
+            db.commit()
+        
+        # Filtro de validação de status pós-recalculo do SLA (Garante consistência para o status "Vencido")
+        if status and t.status != status:
+            continue
+            
+        lista_filtrada.append({
+            "id": t.id,
+            "ticket": t.ticket_ref,
+            "categoria": t.categoria,
+            "nome_contato": t.nome_contato,
+            "email_contato": t.email_contato,
+            "telefone_contato": t.telefone_contato,
+            "descricao": t.descricao,
+            "nivel_suporte": t.nivel_suporte,
+            "atualizacoes": t.atualizacoes,
+            "resolucao": t.resolucao,
+            "status": t.status,
+            "data_criacao": t.data_criacao.isoformat(),
+            "data_encerramento": t.data_encerramento.isoformat() if t.data_encerramento else None
+        })
+        
+    return lista_filtrada
